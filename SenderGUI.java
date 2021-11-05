@@ -1,3 +1,12 @@
+
+import java.io.File;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFileChooser;
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
@@ -8,11 +17,16 @@
  */
 public class SenderGUI extends javax.swing.JFrame {
 
+    private Sender sender;
+    private final JFileChooser fc = new JFileChooser("./");
+    
     /**
      * Creates new form SenderGUI
      */
     public SenderGUI() {
         initComponents();
+        timeoutLabel.setText("Timeout (\u00B5s)");
+        sender = new Sender();
     }
 
     /**
@@ -24,56 +38,49 @@ public class SenderGUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        receiverIPLabel = new javax.swing.JLabel();
-        receiverIPTextField = new javax.swing.JTextField();
-        ACKPortLabel = new javax.swing.JLabel();
-        ACKPortTextField = new javax.swing.JTextField();
-        dataPortTextField = new javax.swing.JTextField();
-        dataPortLabel = new javax.swing.JLabel();
-        filenameTextField = new javax.swing.JTextField();
-        filenameLabel = new javax.swing.JLabel();
-        browseButton = new javax.swing.JButton();
+        mainPanel = new javax.swing.JPanel();
+        isAliveLabel = new javax.swing.JLabel();
         isAliveButton = new javax.swing.JButton();
         sendButton = new javax.swing.JButton();
         unreliableModeRButton = new javax.swing.JRadioButton();
         inOrderPacketLabel = new javax.swing.JLabel();
         numInOrderPackets = new javax.swing.JLabel();
-        timeoutLabel = new javax.swing.JLabel();
+        browseButton = new javax.swing.JButton();
+        filenameTextField = new javax.swing.JTextField();
+        filenameLabel = new javax.swing.JLabel();
+        dataPortTextField = new javax.swing.JTextField();
+        dataPortLabel = new javax.swing.JLabel();
+        ACKPortTextField = new javax.swing.JTextField();
+        ACKPortLabel = new javax.swing.JLabel();
+        receiverIPTextField = new javax.swing.JTextField();
+        receiverIPLabel = new javax.swing.JLabel();
         timeoutTextField = new javax.swing.JTextField();
+        timeoutLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        receiverIPLabel.setText("Receiver IP");
+        isAliveLabel.setText("Undefined");
 
-        receiverIPTextField.addActionListener(new java.awt.event.ActionListener() {
+        isAliveButton.setText("IS ALIVE?");
+        isAliveButton.setActionCommand("isAlive");
+        isAliveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                receiverIPTextFieldActionPerformed(evt);
+                isAliveButtonActionPerformed(evt);
             }
         });
 
-        ACKPortLabel.setText("ACK Port");
-
-        ACKPortTextField.addActionListener(new java.awt.event.ActionListener() {
+        sendButton.setText("SEND");
+        sendButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ACKPortTextFieldActionPerformed(evt);
+                sendButtonActionPerformed(evt);
             }
         });
 
-        dataPortTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                dataPortTextFieldActionPerformed(evt);
-            }
-        });
+        unreliableModeRButton.setText("Unreliable Mode");
 
-        dataPortLabel.setText("Data Port");
+        inOrderPacketLabel.setText("Current # of sent in-order packets");
 
-        filenameTextField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                filenameTextFieldActionPerformed(evt);
-            }
-        });
-
-        filenameLabel.setText("Filename");
+        numInOrderPackets.setText("0");
 
         browseButton.setText("Browse");
         browseButton.addActionListener(new java.awt.event.ActionListener() {
@@ -82,29 +89,26 @@ public class SenderGUI extends javax.swing.JFrame {
             }
         });
 
-        isAliveButton.setText("IS ALIVE?");
-        isAliveButton.setActionCommand("isAlive");
+        filenameLabel.setText("Filename");
 
-        sendButton.setText("SEND");
+        dataPortLabel.setText("Data Port");
 
-        unreliableModeRButton.setText("Unreliable Mode");
+        ACKPortLabel.setText("ACK Port");
 
-        inOrderPacketLabel.setText("Current # of sent in-order packets");
+        receiverIPLabel.setText("Receiver IP");
 
-        numInOrderPackets.setText("0");
+        timeoutLabel.setText("Timeout (?s)");
 
-        timeoutLabel.setText("Timeout (ms)");
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+        javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
+        mainPanel.setLayout(mainPanelLayout);
+        mainPanelLayout.setHorizontalGroup(
+            mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(mainPanelLayout.createSequentialGroup()
+                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(mainPanelLayout.createSequentialGroup()
                                 .addComponent(receiverIPLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(receiverIPTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -118,16 +122,18 @@ public class SenderGUI extends javax.swing.JFrame {
                                 .addComponent(dataPortTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(filenameLabel))
-                            .addGroup(layout.createSequentialGroup()
+                            .addGroup(mainPanelLayout.createSequentialGroup()
                                 .addComponent(timeoutLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(timeoutTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(filenameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(browseButton)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(isAliveButton)
+                    .addGroup(mainPanelLayout.createSequentialGroup()
+                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(isAliveLabel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(isAliveButton, javax.swing.GroupLayout.Alignment.LEADING))
                         .addGap(18, 18, 18)
                         .addComponent(sendButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -136,13 +142,13 @@ public class SenderGUI extends javax.swing.JFrame {
                         .addComponent(inOrderPacketLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(numInOrderPackets, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(39, Short.MAX_VALUE))
+                .addContainerGap(27, Short.MAX_VALUE))
         );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+        mainPanelLayout.setVerticalGroup(
+            mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(receiverIPLabel)
                     .addComponent(receiverIPTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(ACKPortLabel)
@@ -151,47 +157,129 @@ public class SenderGUI extends javax.swing.JFrame {
                     .addComponent(dataPortTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(filenameLabel)
                     .addComponent(filenameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(mainPanelLayout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(browseButton))
-                    .addGroup(layout.createSequentialGroup()
+                    .addGroup(mainPanelLayout.createSequentialGroup()
                         .addGap(25, 25, 25)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(timeoutLabel)
                             .addComponent(timeoutTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(isAliveButton)
                     .addComponent(sendButton)
                     .addComponent(unreliableModeRButton)
                     .addComponent(inOrderPacketLabel)
                     .addComponent(numInOrderPackets, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(63, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(isAliveLabel)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(mainPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void receiverIPTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_receiverIPTextFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_receiverIPTextFieldActionPerformed
-
-    private void ACKPortTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ACKPortTextFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_ACKPortTextFieldActionPerformed
-
-    private void dataPortTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dataPortTextFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_dataPortTextFieldActionPerformed
-
-    private void filenameTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_filenameTextFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_filenameTextFieldActionPerformed
-
     private void browseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseButtonActionPerformed
-        // TODO add your handling code here:
+        if (evt.getActionCommand().equals("Browse")) {
+            int returnVal = fc.showOpenDialog(this);
+            
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                sender.setFile(fc.getSelectedFile());
+                filenameTextField.setText(fc.getSelectedFile().getAbsolutePath());
+            }  
+        }
     }//GEN-LAST:event_browseButtonActionPerformed
+
+    /**
+     * Checks whether the inputted Receiver IP addr and port are ready to receive data
+     * <b>Note: Getting a positive IS ALIVE response just means that a connection 
+     * was made to a server, not that the server is still accepting connections.</b>
+     * 
+     * @param evt - ActionEvent of the GUI component
+     */
+    private void isAliveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_isAliveButtonActionPerformed
+        if (evt.getActionCommand().endsWith("isAlive")) {
+            /* Check if Receiver ready to receive data */
+            try {
+                int ACKPort = Integer.parseInt(ACKPortTextField.getText());
+                int dataPort = Integer.parseInt(dataPortTextField.getText());
+                InetAddress receiverAddr = InetAddress.getByName(receiverIPTextField.getText());
+                int timeout = Integer.parseInt(timeoutTextField.getText());
+                
+                if (!sender.isReady()) {
+                    // First run
+                    sender.setACKPort(ACKPort);
+                    sender.setDataPort(dataPort);
+                    sender.setReceiverAddr(receiverAddr);
+                    sender.setTimeout(timeout);
+                    sender.setSocket();
+                    // Signal to future runs that socket is bound
+                    sender.nowReady();
+                } else {
+                    // Update any changed values
+                    boolean updated = false;
+                    if (ACKPort != sender.getACKPort()) {
+                        sender.setACKPort(ACKPort);
+                        updated = true;
+                    }
+                    if (dataPort != sender.getDataPort()) {
+                        sender.setDataPort(dataPort);
+                    }
+                    if (timeout != sender.getTimeout()) {
+                        sender.setTimeout(timeout);
+                    }
+                    if (receiverAddr.getHostAddress() != sender.getReceiverAddr().getHostAddress()) {
+                        sender.setReceiverAddr(receiverAddr);
+                        
+                    }
+                    // Check if we have to change the socket at all
+                    // Only needed if ACK port updated, since that is what it 
+                    // is bound to
+                    if (updated) {
+                        // Socket bound to ACK port
+                        sender.setSocket();
+                    }
+                }
+
+                boolean isAlive = sender.testAlive();
+                if (isAlive) {
+                    isAliveLabel.setText("Alive");
+                } else {
+                    isAliveLabel.setText("Offline");
+                }
+            } catch (SocketException | UnknownHostException e) {
+                e.printStackTrace();
+                isAliveLabel.setText("Undefined");
+            }
+            /*
+            if (sender.isConnected()) {
+                isAliveLabel.setText("Connected");
+            } else if (!sender.isConnected()) {
+                isAliveLabel.setText("Disconnected");
+                
+            }
+            */
+        }
+    }//GEN-LAST:event_isAliveButtonActionPerformed
+
+    private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
+        if (evt.getActionCommand().equals("SEND")) {
+            sender.execute();
+        }
+    }//GEN-LAST:event_sendButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -238,6 +326,8 @@ public class SenderGUI extends javax.swing.JFrame {
     private javax.swing.JTextField filenameTextField;
     private javax.swing.JLabel inOrderPacketLabel;
     private javax.swing.JButton isAliveButton;
+    private javax.swing.JLabel isAliveLabel;
+    private javax.swing.JPanel mainPanel;
     private javax.swing.JLabel numInOrderPackets;
     private javax.swing.JLabel receiverIPLabel;
     private javax.swing.JTextField receiverIPTextField;
