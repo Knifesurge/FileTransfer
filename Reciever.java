@@ -21,7 +21,7 @@ public class Reciever {
     }
     
     public static void main(String argv[]) throws IOException {
-        byte[] ack = "ACK".getBytes();
+        int seq_check = 0;
         InetAddress ip_sender = InetAddress.getByName(argv[0]);
         int port_reciever = Integer.parseInt(argv[1]);
         int port_ack = Integer.parseInt(argv[2]);
@@ -41,8 +41,11 @@ public class Reciever {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-           rcv_file.write(new String(tmp));
-
+            if (tmp == -1) break;
+            if (seq_check == tmp[0]){
+                seq_check = 1 -tmp[0];
+                rcv_file.write(new String(tmp));
+           }
 
         }
     }
