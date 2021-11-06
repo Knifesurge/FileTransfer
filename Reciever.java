@@ -14,6 +14,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingWorker;
 public class Reciever {
+    
+    private static void send_ack(byte seq_num, InetAddress ip, int port, DatagramSocket rcv_socket) throws IOException{
+        DatagramPacket snd_packet = new DatagramPacket(seq_num, seq_num.length,ip,port);
+        rcv_socket.send(snd_packet); 
+    }
+    
     public static void main(String argv[]) throws IOException {
         byte[] ack = "ACK".getBytes();
         InetAddress ip_sender = InetAddress.getByName(argv[0]);
@@ -23,14 +29,14 @@ public class Reciever {
         DatagramSocket rcv_socket = new DatagramSocket(port_reciever);
         byte[] tmp = new byte[1024 * 4]; 
         DatagramPacket rcv_packet = new DatagramPacket(tmp, tmp.length);
-        DatagramPacket snd_packet = new DatagramPacket(ack, ack.length,ip_sender,port_ack);
+       
         FileWriter rcv_file = new FileWriter(filename);
         
 
         while (true){
             try {
                 rcv_socket.receive(rcv_packet);
-                rcv_socket.send(snd_packet);
+                send_ack(tmp[0],ip_sender,port_ack,rcv_socket);
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
