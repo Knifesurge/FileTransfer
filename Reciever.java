@@ -28,7 +28,7 @@ public class Reciever {
         int port_ack = Integer.parseInt(argv[2]);
         String filename = argv[3];
         DatagramSocket rcv_socket = new DatagramSocket(port_reciever);
-        byte[] tmp = new byte[1024 * 4]; 
+        byte[] tmp = new byte[1024]; 
         DatagramPacket rcv_packet = new DatagramPacket(tmp, tmp.length);
        
         FileWriter rcv_file = new FileWriter(filename);
