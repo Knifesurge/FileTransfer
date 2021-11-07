@@ -37,13 +37,13 @@ public class Reciever {
         while (true){
             try {
                 rcv_socket.receive(rcv_packet);
-                if (tmp[0] == -1) break; // remove if there are issues with timeout 
+                
                 send_ack(tmp[0],ip_sender,port_ack,rcv_socket);
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            
+            if (tmp[0] == -1) break; // remove if there are issues with timeout 
             if (seq_check == tmp[0]){
                 seq_check = 1 -tmp[0];
 		System.out.println("Tmp: " + new String(tmp));
