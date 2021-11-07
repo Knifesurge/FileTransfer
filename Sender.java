@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JLabel;
 import javax.swing.SwingWorker;
 
 /**
@@ -40,6 +41,18 @@ public class Sender extends SwingWorker {
     private boolean isReady = false;
     // How many times a packet will be resent before Receiver considered dead
     private int resendCount = 10;
+    // Whether we are in unreliable mode or not (resend every 10th packet)
+    private boolean unreliableMode = false;
+    // Number of packets sent
+    private int numSentPackets = 0;
+    // Label on GUI to update num sent in-order packets
+    private JLabel numPacketsLabel;
+    // Whether or not the Packet being sent is the first packet with data
+    private boolean isFirstDataPacket = true;
+    // Start time of transmission
+    private int startTimeMillis;
+    // End time of transmission
+    private int endTimeMillis;
     
     public Sender() {
         socket = null;
@@ -57,6 +70,9 @@ public class Sender extends SwingWorker {
     public void setReceiverAddr(InetAddress rAddr) { this.receiverAddr = rAddr; }
     public InetAddress getReceiverAddr() { return this.receiverAddr; }
     public void setSocket() throws SocketException { this.socket = new DatagramSocket(ACKPort); socket.setSoTimeout(timeout/1000); }
+    public boolean isUnreliable() { return this.unreliableMode; }
+    public void setUnreliable(boolean b) { this.unreliableMode = b; }
+    public void setLabel(JLabel label) { this.numPacketsLabel = label; }
     
     public Sender(InetAddress receiverAddr, int dataPort, int ACKPort, int timeout) throws SocketException {
         this.receiverAddr = receiverAddr;
@@ -73,38 +89,69 @@ public class Sender extends SwingWorker {
     @Override
     protected String doInBackground() {
         // Num bytes read from file
-        int read = 0;
+        int readBytes = 0;
         int total = 0;
         boolean success;
-        byte[] tmp = new byte[1024 * 4];    // Set up a 4 KB buffer
+        byte[] readTmp = new byte[1024];    // Set up a 1 KB buffer
         byte[] buf;
+        byte[] tmp;
         try {
             FileInputStream fis = new FileInputStream(userFile);
-            while ((read = fis.read(tmp)) > 0) {
-                buf = Arrays.copyOf(tmp, read);
-                total += read;
-                success = sendChunkAndVerifyACK(buf, read, this.sequenceNumber);
-               
+            boolean reading = true;
+            while (reading) {
+                readBytes = fis.read(readTmp);
+                if (readBytes < 0) {
+                    reading = false;
+                }
+                // DEBUG
+                System.out.println("Data: " + new String(readTmp));
+                
+                // Convert seq num to byte-string, then the actual byte value
+                tmp = new byte[] {Byte.valueOf(Integer.toBinaryString(this.sequenceNumber))};
+                // Create the buf array to hold [seq_num, data_array]
+                buf = new byte[tmp.length + readTmp.length];    // tmp.length = 1
+
+                // Copy tmp array into buf array
+                System.arraycopy(tmp, 0, buf, 0, tmp.length);
+                // Copy array of read bytes into buf at an offset of tmp.length = 1
+                System.arraycopy(readTmp, 0, buf, tmp.length, readTmp.length);
+                    
+                total += readTmp.length;
+                
+                // Send the packet, grab ACK verification status
+                System.out.println("Sending and waiting for ACK...");
+                success = sendChunkAndVerifyACK(buf, readTmp.length, this.sequenceNumber);
+                System.out.println(success ? "Proper ACK received..." : "Improper ACK, resend");
+                
                 // Check we received proper ACK, resend until we do or until we 
                 // resend the packet 10 times
                 if (success) {
                     numInOrderPackets++;
                 } else {
-                    numInOrderPackets = 0;
                     while (!success && resendCount < 10) {
-                        success = sendChunkAndVerifyACK(buf, read, this.sequenceNumber);
+                        success = sendChunkAndVerifyACK(buf, readTmp.length, this.sequenceNumber);
                         resendCount++;
                     }
+                    if (success)
+                        numInOrderPackets++;
                 }
                 // Swap to other sequence number
                 this.sequenceNumber = this.sequenceNumber == 0 ? 1 : 0;
             }
-            // Send EOT to Receiver
+            
+            // Finished transfer, send EOT to Receiver
             buf = new byte[] {-1};
-            packet = new DatagramPacket(buf, buf.length, receiverAddr, dataPort);
+            System.out.println("Sending EOT...");
             success = sendChunkAndVerifyACK(buf, buf.length, -1);
             if (success) {
-                
+                System.out.println("EOT ACKd, sending TTT then closing socket");
+                endTimeMillis = (int) System.currentTimeMillis();
+                int TTT = (int) (endTimeMillis - startTimeMillis);
+                buf = new byte[] {Byte.valueOf(Integer.toBinaryString(TTT), 2)};
+                System.out.println("TTT: " + TTT);
+                packet = new DatagramPacket(buf, buf.length, receiverAddr, dataPort);
+                socket.send(packet);
+                socket.close();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -115,7 +162,7 @@ public class Sender extends SwingWorker {
     @Override
     protected void done() {
         try {
-            socket.close();
+            numPacketsLabel.setText(String.valueOf(numInOrderPackets));
         } catch (Exception ignored) {}
     }
     
@@ -123,17 +170,15 @@ public class Sender extends SwingWorker {
         try {
             // Send packet to Receiver, wait for ACK with timeout of 0.5 s (500 ms)
             socket.setSoTimeout(500_000);
-            byte[] buf = {0};
+            byte[] buf = {2};
             packet = new DatagramPacket(buf, buf.length, receiverAddr, dataPort);
             socket.send(packet);
             // Get an ACK response or timeout
             receive();
-            byte[] data = packet.getData();
-            if (data[0] == 0) {
-                // Reset socket timeout
-                socket.setSoTimeout(timeout / 1000);
-                return true;
-            }
+            // Response received, don't really need to check the ACK
+            // Reset socket timeout
+            socket.setSoTimeout(timeout / 1000);
+            return true;
         } catch (SocketException ex) {
             Logger.getLogger(Sender.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SocketTimeoutException ex) {
@@ -145,8 +190,28 @@ public class Sender extends SwingWorker {
     }
     
     private boolean sendChunkAndVerifyACK(byte[] buffer, int length, int expectedSeqNum) throws IOException, SocketTimeoutException {
-        send(buffer, length);
-        receive();
+        if (isFirstDataPacket) {
+            isFirstDataPacket = false;
+            startTimeMillis = (int) System.currentTimeMillis();
+        }
+        if (!unreliableMode) {
+            send(buffer, length);
+            receive();
+        } else {    // In unreliable mode
+            if (numSentPackets % 10 == 9) {     // Sending 10th packet
+                try {
+                    // Don't send every 10th packet, just timeout and wait for ACK
+                    receive();
+                } catch (SocketTimeoutException e) {
+                    // Socket timed out, send the packet and receive the ACK
+                    send(buffer, length);
+                    receive();
+                }     
+            } else {
+                send(buffer, length);
+                receive();
+            }
+        }
         return packet.getData()[0] == expectedSeqNum;
     }
     
@@ -157,7 +222,7 @@ public class Sender extends SwingWorker {
     }
     
     public void receive() throws IOException, SocketTimeoutException {
-        byte[] buf = new byte[1024*10];
+        byte[] buf = new byte[1024];
         packet = new DatagramPacket(buf, buf.length);
         socket.receive(packet);
     }

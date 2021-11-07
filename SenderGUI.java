@@ -3,6 +3,9 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -218,13 +221,21 @@ public class SenderGUI extends javax.swing.JFrame {
                 int dataPort = Integer.parseInt(dataPortTextField.getText());
                 InetAddress receiverAddr = InetAddress.getByName(receiverIPTextField.getText());
                 int timeout = Integer.parseInt(timeoutTextField.getText());
+                // Get the file the User entered (or browsed to)
+                File userfile = new File(filenameTextField.getText());
+                boolean unreliableMode = unreliableModeRButton.isSelected();
                 
+                System.out.println(userfile.exists() ? "File exists" : "Can't find file: " + userfile.getAbsolutePath());
                 if (!sender.isReady()) {
                     // First run
                     sender.setACKPort(ACKPort);
                     sender.setDataPort(dataPort);
                     sender.setReceiverAddr(receiverAddr);
                     sender.setTimeout(timeout);
+                    sender.setUnreliable(unreliableMode);
+                    sender.setLabel(numInOrderPackets);
+                    if (userfile.exists())
+                        sender.setFile(userfile);
                     sender.setSocket();
                     // Signal to future runs that socket is bound
                     sender.nowReady();
@@ -244,6 +255,9 @@ public class SenderGUI extends javax.swing.JFrame {
                     if (receiverAddr.getHostAddress() != sender.getReceiverAddr().getHostAddress()) {
                         sender.setReceiverAddr(receiverAddr);
                         
+                    }
+                    if (unreliableMode != sender.isUnreliable()) {
+                        sender.setUnreliable(unreliableMode);
                     }
                     // Check if we have to change the socket at all
                     // Only needed if ACK port updated, since that is what it 
