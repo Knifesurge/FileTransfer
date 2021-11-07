@@ -16,7 +16,8 @@ import javax.swing.SwingWorker;
 public class Reciever {
     
     private static void send_ack(byte seq_num, InetAddress ip, int port, DatagramSocket rcv_socket) throws IOException{
-        DatagramPacket snd_packet = new DatagramPacket(seq_num, seq_num.length,ip,port);
+	byte[] buffer = new byte[] {seq_num};
+        DatagramPacket snd_packet = new DatagramPacket(buffer, buffer.length,ip,port);
         rcv_socket.send(snd_packet); 
     }
     
@@ -45,6 +46,7 @@ public class Reciever {
             
             if (seq_check == tmp[0]){
                 seq_check = 1 -tmp[0];
+		System.out.println("Tmp: " + new String(tmp));
                 rcv_file.write(new String(tmp));
            }
         }
